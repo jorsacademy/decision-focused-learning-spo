@@ -1,6 +1,6 @@
 # Decision-Focused Learning with SPO+
 
-A compact research-oriented implementation of **Smart Predict-then-Optimize (SPO)** and the **SPO+** surrogate for a downstream combinatorial selection problem.
+A compact research-oriented implementation of **Smart Predict-then-Optimize (SPO)** and the **SPO+** surrogate for downstream combinatorial optimization.
 
 > **License:** source-available for non-commercial use only. See `LICENSE`.
 
@@ -15,7 +15,9 @@ This repository compares:
 
 The implementation follows the research line introduced by Elmachtoub and Grigas, *Smart "Predict, then Optimize"*.
 
-## Downstream problem
+## Downstream problems
+
+### Fixed-cardinality selection
 
 For each instance, a feature vector `x` determines an unknown cost vector `c` over `n` candidate items. The downstream decision selects exactly `k` items:
 
@@ -24,7 +26,19 @@ For each instance, a feature vector `x` determines an unknown cost vector `c` ov
 \quad \text{s.t.}\quad \sum_i w_i = k.
 \]
 
-The exact optimization oracle simply selects the `k` smallest costs. This keeps the optimization layer fully transparent while preserving the discrete decision structure needed to demonstrate predict-then-optimize regret.
+The exact oracle selects the `k` smallest costs.
+
+### Contextual shortest path
+
+The repository also includes a directed square grid graph with right/down arcs from the top-left source to the bottom-right sink. Contextual features determine unknown edge costs, and the downstream problem is
+
+\[
+\min_{w \in \mathcal{P}} c^T w,
+\]
+
+where `P` is the set of valid source-to-sink paths and `w` is an edge-incidence vector.
+
+Because the grid is a DAG, the exact shortest-path oracle is implemented with dynamic programming. The same oracle can also optimize the reflected SPO+ costs `2ĉ-c`, including negative reflected edge costs.
 
 ## SPO loss and SPO+ surrogate
 
@@ -40,16 +54,17 @@ SPO+ uses the optimization oracle at the reflected costs `2ĉ-c` and gives a tra
 2\left(w^*(c)-w^*(2\hat c-c)\right).
 \]
 
-The code implements the corresponding surrogate objective directly with PyTorch autograd while treating discrete oracle outputs as fixed decisions.
+The code implements the corresponding surrogate directly with PyTorch autograd while treating discrete oracle outputs as fixed subgradient selections.
 
 ## Features
 
-- synthetic contextual cost dataset with controlled model misspecification
-- exact `k`-selection optimization oracle
-- prediction MSE and decision regret metrics
-- SPO+ surrogate training
+- synthetic contextual cost datasets with controlled model misspecification
+- exact fixed-cardinality selection oracle
+- exact grid shortest-path oracle
+- prediction MSE and downstream regret metrics
+- SPO+ surrogate training for both downstream problems
 - matched MSE vs SPO+ experiments
-- repeated-seed mean/std summaries
+- repeated-seed summaries for the selection benchmark
 - normalized regret relative to the clairvoyant optimum
 - unit tests for oracle optimality, regret, SPO+ gradients, and training smoke tests
 - GitHub Actions CI with Python 3.11/3.12, pytest, and Ruff
@@ -64,9 +79,11 @@ The code implements the corresponding surrogate objective directly with PyTorch 
 │   ├── losses.py
 │   ├── models.py
 │   ├── training.py
-│   └── evaluation.py
+│   ├── evaluation.py
+│   └── shortest_path.py
 ├── scripts/
-│   └── compare_methods.py
+│   ├── compare_methods.py
+│   └── compare_shortest_path.py
 ├── tests/
 ├── .github/workflows/ci.yml
 ├── pyproject.toml
@@ -82,20 +99,40 @@ python -m pip install --upgrade pip
 pip install -e ".[dev]"
 ```
 
-## Run the comparison
+## Run the selection comparison
 
 ```bash
 python scripts/compare_methods.py --epochs 100 --seeds 0 1 2 3 4
 ```
 
-The script trains two models from matched initializations and data splits, then reports prediction error and downstream decision metrics. The main comparison is not "which model predicts costs best?" but "which model makes better optimization decisions?"
+## Run the shortest-path comparison
+
+```bash
+python scripts/compare_shortest_path.py \
+  --grid-size 5 \
+  --features 8 \
+  --train-samples 512 \
+  --test-samples 256 \
+  --epochs 100
+```
+
+The script creates matched MSE and SPO+ models, trains both on the same contextual shortest-path dataset, and reports:
+
+- prediction MSE,
+- achieved path cost,
+- clairvoyant optimal path cost,
+- mean regret,
+- mean normalized regret,
+- zero-regret decision rate.
+
+The intended comparison is decision quality, not only cost-prediction accuracy.
 
 ## Interpretation
 
-A useful result can look like this qualitatively:
+A useful decision-focused result can look like this qualitatively:
 
 - the MSE model has lower prediction error,
-- the SPO+ model has similar or even worse prediction error,
+- the SPO+ model has similar or worse prediction error,
 - but the SPO+ model has lower downstream regret.
 
 No numerical performance claims are hard-coded into this repository; run the experiments to obtain results for your environment and random seeds.
