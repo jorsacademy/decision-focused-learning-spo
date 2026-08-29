@@ -64,9 +64,10 @@ The code implements the corresponding surrogate directly with PyTorch autograd w
 - prediction MSE and downstream regret metrics
 - SPO+ surrogate training for both downstream problems
 - matched MSE vs SPO+ experiments
-- repeated-seed summaries for the selection benchmark
+- repeated-seed mean/std/95% CI summaries for both benchmarks
 - normalized regret relative to the clairvoyant optimum
-- unit tests for oracle optimality, regret, SPO+ gradients, and training smoke tests
+- explicit MSE-minus-SPO+ normalized-regret improvement summary for shortest path
+- unit tests for oracle optimality, regret, SPO+ gradients, statistical summaries, and training smoke tests
 - GitHub Actions CI with Python 3.11/3.12, pytest, and Ruff
 
 ## Project structure
@@ -113,10 +114,11 @@ python scripts/compare_shortest_path.py \
   --features 8 \
   --train-samples 512 \
   --test-samples 256 \
-  --epochs 100
+  --epochs 100 \
+  --seeds 0 1 2 3 4
 ```
 
-The script creates matched MSE and SPO+ models, trains both on the same contextual shortest-path dataset, and reports:
+For every seed the script creates matched MSE and SPO+ models, trains both on the same contextual shortest-path dataset, and evaluates:
 
 - prediction MSE,
 - achieved path cost,
@@ -125,7 +127,21 @@ The script creates matched MSE and SPO+ models, trains both on the same contextu
 - mean normalized regret,
 - zero-regret decision rate.
 
-The intended comparison is decision quality, not only cost-prediction accuracy.
+It then aggregates every metric across seeds using:
+
+- arithmetic mean,
+- sample standard deviation,
+- normal-approximation 95% confidence interval half-width, `1.96 * s / sqrt(n)`.
+
+The final `spo+_improvement` row reports
+
+\[
+\mathrm{NR}_{MSE}-\mathrm{NR}_{SPO+},
+\]
+
+where `NR` is mean normalized regret. Positive values therefore favor SPO+.
+
+The intended comparison is decision quality, not only cost-prediction accuracy. Confidence intervals quantify seed-to-seed uncertainty; they are not a substitute for a full hypothesis test.
 
 ## Interpretation
 
