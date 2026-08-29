@@ -144,7 +144,7 @@ def train_shortest_path_model(
 ) -> list[float]:
     """Train a cost predictor with MSE or shortest-path SPO+."""
     if method not in {"mse", "spo+"}:
-        raise ValueError("method must be 'mse' or 'spo+'").
+        raise ValueError("method must be 'mse' or 'spo+'")
     if epochs <= 0 or learning_rate <= 0:
         raise ValueError("epochs and learning_rate must be positive")
 
