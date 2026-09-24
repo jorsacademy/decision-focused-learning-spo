@@ -1,4 +1,20 @@
-# Decision-Focused Learning with SPO+
+# Decision-Focused Learning and Differentiable Optimization
+
+<!-- portfolio-umbrella:start -->
+## Portfolio role
+
+This repository is the primary umbrella repository for this Jors Academy research area. Related projects have been consolidated under `projects/` so the methods, implementations, experiments, and case studies can be maintained and explored from one place.
+
+### Included projects
+
+- [`differentiable-black-box-supplier-selection-pytorch`](projects/differentiable-black-box-supplier-selection-pytorch/)
+- [`differentiable-optimization-portfolio`](projects/differentiable-optimization-portfolio/)
+- [`differentiable-optimization-pytorch`](projects/differentiable-optimization-pytorch/)
+- [`distributionally-robust-decision-focused-learning`](projects/distributionally-robust-decision-focused-learning/)
+- [`predict-then-optimize-production-planning-spo-plus-pytorch`](projects/predict-then-optimize-production-planning-spo-plus-pytorch/)
+
+Each consolidated project keeps its own files and a `SOURCE_REPOSITORY.md` provenance record. The snapshot preserves the source repository's default-branch files at consolidation time; repository-level history and metadata remain separate from the snapshot.
+<!-- portfolio-umbrella:end -->
 
 A compact research-oriented implementation of **Smart Predict-then-Optimize (SPO)** and the **SPO+** surrogate for downstream combinatorial optimization.
 
